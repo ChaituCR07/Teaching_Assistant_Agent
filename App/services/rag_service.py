@@ -68,10 +68,11 @@ if __name__ == "__main__":
     # Re-process document if needed:
     # service.process_pdf_document(reset=True)
 
-    query = "What are pointers?"
-    chunks = service.retrieve_from_pdf(query, k=3)
+    query = input("Enter your query: ")
+    if query.strip():
+        chunks = service.retrieve_from_pdf(query, k=3)
 
-    print(f"\n--- RETRIEVED CHUNKS FOR QUERY: '{query}' ---")
-    for i, chunk in enumerate(chunks, 1):
-        print(f"\n--- CHUNK {i} ---")
-        print(chunk)
+        print(f"\n--- RETRIEVED CHUNKS FOR QUERY: '{query}' ---")
+        for i, chunk in enumerate(chunks, 1):
+            print(f"\n--- CHUNK {i} ---")
+            print(chunk)
