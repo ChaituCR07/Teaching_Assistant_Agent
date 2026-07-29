@@ -13,22 +13,23 @@ load_dotenv()
 @tool
 def retriever(query: str) -> list:
     """
-    This tool is used to retrieve data from a pdf which answer questions,
-    on C programming language. This tool retrieves the excat curriculum taught in DSTAM.
-    Use this tool to gain information for C programming curriculum of DSATM.
-
-    Input:
-    Query (str): The query given /enhanced by the AI Agent
-
-    Output:
-    Chunks (list): The chunks retrieved from vectorDB
+    RAG Service Tool: Retrieves internal course materials, syllabus, and concepts on C programming
+    taught in the DSATM curriculum (from the 'Let Us C' textbook reference database).
+    Use this tool for queries about C fundamentals, pointers, arrays, structures, loops, and DSATM course content.
     """
     embedding_service = EmbeddingService()
     context = embedding_service.retrieve_from_pdf(query)
 
     return context
 
-web_search = DuckDuckGoSearchRun()
+@tool
+def web_search(query: str) -> str:
+    """
+    Web Search Engine Tool: Searches the web live for external technical information, latest C language standards,
+    programming news, library documentations, or real-time topics not present in the DSATM reference textbook.
+    """
+    search_run = DuckDuckGoSearchRun()
+    return search_run.invoke(query)
 
 class TeachingAssistantAgent:
     def __init__(self):
@@ -50,18 +51,19 @@ class TeachingAssistantAgent:
                     [
                         SystemMessage(
                     content="""
-                    You are a helpful Teaching Assistant for the C Programming language at DSTAM, Bangalore.
-                    
-                    You must answer all questions keeping in mind that the answers are to be given from the 
-                    context of the DSTAM curriculum C Programming Course. You have access to the `retriever` 
-                    tool. Any information not available in the pdf tool is to be attained using the `web_search` tool.
-                    
-                    Strictly maintain that you are a C programming teaching agent only. Do not answer irrelevant questions.
-                    
+                    You are an intelligent Teaching Assistant for C Programming at DSATM, Bangalore.
+
+                    Tool Selection Strategy:
+                    - Analyze the user's query and dynamically choose the most appropriate tool:
+                      1. Use `retriever` (RAG Service) if the query relates to core C programming concepts, DSATM course curriculum, pointers, memory allocation, control flow, functions, or textbook topics.
+                      2. Use `web_search` (Search Engine) if the query requires live web information, recent C language updates (e.g. C23 features), external programming news, or documentation not in the textbook.
+
+                    - Maintain your role strictly as a C programming teaching assistant. If a query is completely irrelevant to programming, politely refuse to answer.
+
                     Output Format:
-                    1. [Answer 1]
-                    2. [Answer 2]
-                    3. [Answer 3]
+                    1. [Answer / Point 1]
+                    2. [Answer / Point 2]
+                    3. [Answer / Point 3]
                     """
                         )
                     ]
@@ -72,16 +74,24 @@ class TeachingAssistantAgent:
         }
 
     def tool_node(self, state):
-        """Performs the tool calls"""
+        """Performs tool calls and logs tool selection"""
 
         result = []
 
         for tool_call in state['messages'][-1].tool_calls:
+            tool_name = tool_call["name"]
             args = tool_call.get("args", {}).copy()
             if 'self' in args:
                 del args['self']
 
-            tool = self.tools_by_name[tool_call["name"]]
+            if tool_name == "retriever":
+                print(f"\n🔍 [Tool Selected]: RAG Service (PDF Vector DB) | Query: '{args.get('query', '')}'")
+            elif tool_name in ["web_search", "duckduckgo_search"]:
+                print(f"\n🌐 [Tool Selected]: Search Engine (DuckDuckGo) | Query: '{args.get('query', '')}'")
+            else:
+                print(f"\n🛠️ [Tool Selected]: {tool_name} | Query: '{args.get('query', '')}'")
+
+            tool = self.tools_by_name[tool_name]
             observation = tool.invoke(args)
 
             if isinstance(observation, list):
