@@ -1,6 +1,6 @@
 # Teaching Assistant Agent (FIP)
 
-An AI-powered Teaching Assistant application that utilizes **Retrieval-Augmented Generation (RAG)** to index educational materials (PDFs) and answer student queries accurately using LangChain, HuggingFace embeddings, Chroma Vector Database, and Groq LLMs.
+An AI-powered Teaching Assistant application that utilizes **Retrieval-Augmented Generation (RAG)** and **LangGraph Workflows** to answer student queries for the C Programming course at DSATM, Bangalore. Built with LangChain, LangGraph, HuggingFace embeddings, Chroma Vector Database, DuckDuckGo web search, and Groq LLMs.
 
 ---
 
@@ -10,11 +10,11 @@ An AI-powered Teaching Assistant application that utilizes **Retrieval-Augmented
 FIP/
 ├── App/
 │   ├── agents/
-│   │   ├── ta_agent.py       # Basic Groq LLM agent implementation
-│   │   └── ta_agent1.py      # Object-oriented TeachingAgent implementation
+│   │   └── ta_agent.py       # TeachingAssistantAgent with bound tools (RAG retriever & web search)
 │   ├── services/
 │   │   └── rag_service.py    # RAG service: PDF loading, chunking, embedding, vector store & retrieval
-│   └── workflows/            # Workflow definitions (extensible)
+│   └── workflows/
+│       └── ta_workflow.py   # LangGraph workflow (StateGraph with brain & action nodes)
 ├── Assets/
 │   └── Let us c - Summary.pdf # Reference PDF document for RAG indexing
 ├── rag_service_db/           # Local persistent Chroma DB storage
@@ -29,8 +29,11 @@ FIP/
 - **Document Processing & Chunking**: Parses PDF documents into optimal text passages using `PyPDFLoader` and `RecursiveCharacterTextSplitter`.
 - **Vector Embeddings**: Uses HuggingFace's `BAAI/bge-small-en-v1.5` embeddings for fast and semantic representation.
 - **Chroma Vector Store**: Manages persistent vector storage with collection reset capabilities and deterministic chunk indexing to avoid duplication.
-- **Deduplicated Context Retrieval**: Retrieves top relevant contexts while filtering out duplicate passages.
-- **Groq LLM Integration**: Uses Groq's high-speed inference engine (`langchain-groq`) to generate responses to queries.
+- **RAG & Web Search Tools**: Equips the agent with a custom PDF `retriever` tool for course materials and `DuckDuckGoSearchRun` for supplementary web searches.
+- **LangGraph Workflow**: State-driven workflow (`ta_workflow.py`) built with `StateGraph`, enabling autonomous tool-calling loops and decision routing.
+- **Interactive User Input**: Accepts real-time queries dynamically via `input()` across agent, workflow, and RAG service modules.
+- **Formatted LLM Output**: Displays clean Markdown answer responses instead of raw message metadata objects.
+- **DSATM Curriculum Context**: Configured system prompt tailored to the DSATM C Programming curriculum.
 
 ---
 
@@ -51,15 +54,29 @@ GROQ_API_KEY=your_groq_api_key_here
 Ensure your virtual environment is active and install the required packages:
 
 ```bash
-pip install langchain langchain-community langchain-huggingface langchain-chroma langchain-groq sentence-transformers chromadb pypdf python-dotenv
+pip install langchain langgraph langchain-community langchain-huggingface langchain-chroma langchain-groq sentence-transformers chromadb pypdf python-dotenv
 ```
 
 ---
 
 ## 🚀 Usage
 
-### 1. Indexing PDF & Testing Retrieval (RAG Service)
-To process the PDF document, index its chunks into Chroma DB, and perform sample retrieval queries:
+### 1. Interacting with the Teaching Assistant Agent
+To run the interactive agent with bound tools (PDF retriever & Web Search):
+
+```bash
+python -m App.agents.ta_agent
+```
+
+### 2. Running the LangGraph TA Workflow
+To run the state-driven LangGraph workflow:
+
+```bash
+python -m App.workflows.ta_workflow
+```
+
+### 3. Indexing PDF & Testing Retrieval (RAG Service)
+To test vector DB retrieval directly or re-index documents:
 
 ```bash
 python -m App.services.rag_service
@@ -67,21 +84,10 @@ python -m App.services.rag_service
 
 > **Note**: To re-index a new or updated document, uncomment `service.process_pdf_document(reset=True)` inside `App/services/rag_service.py`.
 
-### 2. Interacting with the Teaching Assistant Agent
-To run the Groq-powered Teaching Assistant interactive agent:
-
-```bash
-python -m App.agents.ta_agent
-```
-or
-```bash
-python -m App.agents.ta_agent1
-```
-
 ---
 
 ## ⚡ Customization
 
 - **Chunk Size**: Modify `chunk_size` and `chunk_overlap` inside `EmbeddingService.process_pdf_document()` in `App/services/rag_service.py` to tune passage granularity.
 - **Retrieval Count (`k`)**: Pass `k=<number>` to `retrieve_from_pdf(query, k=5)` to retrieve more or fewer context passages per query.
-- **LLM Model**: Adjust `model="openai/gpt-oss-120b"` or temperature settings inside `App/agents/ta_agent1.py`.
+- **LLM Model**: Adjust `model="openai/gpt-oss-20b"` or temperature settings inside `TeachingAssistantAgent` in `App/agents/ta_agent.py`.
