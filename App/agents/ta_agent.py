@@ -13,9 +13,8 @@ load_dotenv()
 @tool
 def retriever(query: str) -> list:
     """
-    RAG Service Tool: Retrieves internal course materials, syllabus, and concepts on C programming
-    taught in the DSATM curriculum (from the 'Let Us C' textbook reference database).
-    Use this tool for queries about C fundamentals, pointers, arrays, structures, loops, and DSATM course content.
+    RAG Service Tool (PDF Vector Store): Retrieves internal course notes, DSATM syllabus topics, and textbook definitions from the 'Let Us C' course PDF database.
+    Use this tool when the query specifically asks about DSATM textbook content, course syllabus, or internal PDF notes.
     """
     embedding_service = EmbeddingService()
     context = embedding_service.retrieve_from_pdf(query)
@@ -25,8 +24,8 @@ def retriever(query: str) -> list:
 @tool
 def web_search(query: str) -> str:
     """
-    Web Search Engine Tool: Searches the web live for external technical information, latest C language standards,
-    programming news, library documentations, or real-time topics not present in the DSATM reference textbook.
+    Web Search Engine Tool (DuckDuckGo Search): Searches the live web for general programming concepts, language comparisons (e.g. C vs Python, C vs C++), real-world advantages/disadvantages, modern software practices, latest C standards (C23), or external technical documentation.
+    Use this tool for general web search queries, comparisons, or topics not limited to the local textbook.
     """
     search_run = DuckDuckGoSearchRun()
     return search_run.invoke(query)
@@ -54,11 +53,12 @@ class TeachingAssistantAgent:
                     You are an intelligent Teaching Assistant for C Programming at DSATM, Bangalore.
 
                     Tool Selection Strategy:
-                    - Analyze the user's query and dynamically choose the most appropriate tool:
-                      1. Use `retriever` (RAG Service) if the query relates to core C programming concepts, DSATM course curriculum, pointers, memory allocation, control flow, functions, or textbook topics.
-                      2. Use `web_search` (Search Engine) if the query requires live web information, recent C language updates (e.g. C23 features), external programming news, or documentation not in the textbook.
+                    - Analyze the user's query and dynamically select the appropriate tool:
+                      1. Use `web_search` (Search Engine) for general programming queries, language comparisons (e.g., C vs Python, C vs C++), real-world advantages/disadvantages, modern development trends, or external web information.
+                      2. Use `retriever` (RAG Service) when the query specifically targets the internal DSATM textbook ('Let Us C'), course syllabus, or internal PDF notes.
 
-                    - Maintain your role strictly as a C programming teaching assistant. If a query is completely irrelevant to programming, politely refuse to answer.
+                    - If the user asks about other programming languages in comparison to C (e.g., "comparison of C with Python"), use `web_search` to provide a complete comparison, highlighting the C perspective as a Teaching Assistant.
+                    - If a query is completely unrelated to technology/programming, politely refuse to answer.
 
                     Output Format:
                     1. [Answer / Point 1]
