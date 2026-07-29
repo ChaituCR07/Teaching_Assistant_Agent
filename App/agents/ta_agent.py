@@ -40,7 +40,7 @@ class TeachingAssistantAgent:
         )
 
         tools_list = [retriever, web_search]
-
+        self.tools_by_name = {tool.name: tool for tool in tools_list}
         self.llm_with_tools = llm.bind_tools(tools_list)
 
     def run_llm(self, state: dict) -> dict: # Brain
@@ -71,19 +71,43 @@ class TeachingAssistantAgent:
             "llm_calls": state.get('llm_calls', 0) + 1
         }
 
-    def tool_node(self, state: dict) -> dict: # Action
-        pass
+    def tool_node(self, state):
+        """Performs the tool calls"""
+
+        result = []
+
+        for tool_call in state['messages'][-1].tool_calls:
+            args = tool_call.get("args", {}).copy()
+            if 'self' in args:
+                del args['self']
+
+            tool = self.tools_by_name[tool_call["name"]]
+            observation = tool.invoke(args)
+
+            if isinstance(observation, list):
+                content_string = "\n".join(observation)
+            else:
+                content_string = str(observation)
+
+            result.append(
+                ToolMessage(
+                    content=content_string,
+                    tool_call_id=tool_call["id"]
+                )
+            )
+
+        return {"messages": result}
 
 if __name__ == "__main__":
-    from langchain.messages import HumanMessage
+    from App.workflows.ta_workflow import TeachingAssistantWorkflow
 
     query = input("Enter your query: ")
     if query.strip():
-        agent = TeachingAssistantAgent()
-        response = agent.run_llm({"messages": [HumanMessage(content=query)]})
+        ta_workflow = TeachingAssistantWorkflow()
+        output = ta_workflow.run_ta_workflow(query)
         print("\n--- AGENT RESPONSE ---")
-        messages = response.get("messages", [])
-        if messages and hasattr(messages[-1], "content"):
+        messages = output.get("messages", [])
+        if messages and hasattr(messages[-1], "content") and messages[-1].content:
             print(messages[-1].content)
         else:
-            print(response)
+            print(output)
