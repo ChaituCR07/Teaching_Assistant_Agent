@@ -122,4 +122,4 @@ def extract_webpage_content(url: str):
     return response
 
 if __name__ == "__main__":
-    mcp.run()
+    mcp.run(transport="http", port=5678)

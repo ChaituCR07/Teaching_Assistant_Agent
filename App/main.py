@@ -70,4 +70,8 @@ def ask_ta_agent(query: str):
 
 @app.get("/mcp/tools")
 async def fetch_mcp_tools():
-    return {"tools": app.state.mcp_tools}
+    tools_summary = [
+        {"name": getattr(tool, "name", str(tool)), "description": getattr(tool, "description", "")}
+        for tool in app.state.mcp_tools
+    ]
+    return {"tools": tools_summary}
