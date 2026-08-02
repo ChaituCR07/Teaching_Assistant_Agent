@@ -1,4 +1,4 @@
-# Teaching Assistant & Research Agent System (FIP)
+# Teaching Assistant & Research Agent System 
 
 An AI-powered Teaching & Research Assistant application that utilizes **Retrieval-Augmented Generation (RAG)**, **LangGraph Workflows**, **FastAPI REST API**, and **FastMCP Tool Server** to assist students and faculty at DSATM, Bangalore. Built with LangChain, LangGraph, HuggingFace embeddings, Chroma Vector Database, DuckDuckGo, Tavily, arXiv, and Groq LLMs.
 
