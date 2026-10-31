@@ -57,7 +57,7 @@ TAVILY_API_KEY=your_tavily_api_key_here
 ```
 
 ### 3. Dependencies
-Ensure your virtual environment is active and install the required packages:
+Ensure your virtual environment is active and install the required packages :
 
 ```bash
 pip install fastapi uvicorn langchain langgraph langchain-community langchain-huggingface langchain-chroma langchain-groq sentence-transformers chromadb pypdf python-dotenv fastmcp arxiv tavily-python
